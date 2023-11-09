@@ -12,6 +12,14 @@ df = spark.read.csv("dbfs:/databricks-datasets/nyctaxi/tripdata/yellow/yellow_tr
 
 # COMMAND ----------
 
+type(df)
+
+# COMMAND ----------
+
+df.select("fare_amount")
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC ###### Para facilitar a execução das atividades, quem tiver maior familiaridade com SQL poderá utilizar o comando abaixo que nos permite executar queries SQL diretamente
 
@@ -19,12 +27,20 @@ df = spark.read.csv("dbfs:/databricks-datasets/nyctaxi/tripdata/yellow/yellow_tr
 
 df.createOrReplaceTempView("taxi_trips")
 
+# COMMAND ----------
+
 query = """
     SELECT *
     FROM taxi_trips
 """
 
 spark.sql(query).display()
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC
+# MAGIC SELECT * from taxi_trips
 
 # COMMAND ----------
 
@@ -38,8 +54,59 @@ spark.sql(query).display()
 
 # COMMAND ----------
 
+display(df)
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   CAST(DATE_FORMAT(tpep_pickup_datetime, 'H') AS INT) AS pickup_time,
+# MAGIC   COUNT(*) AS num_trips
+# MAGIC   FROM taxi_trips
+# MAGIC   GROUP BY
+# MAGIC   pickup_time
+# MAGIC   ORDER BY
+# MAGIC   num_trips DESC
+# MAGIC  
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #### Pergunta 2: Qual é a média de distância percorrida por viagem em cada dia da semana?
+
+# COMMAND ----------
+
+- dias da semana, preciso extrair
+- media por dia da semana
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select
+# MAGIC   tpep_pickup_datetime,
+# MAGIC   trip_distance,
+# MAGIC   dayofweek(tpep_pickup_datetime) as day_of_week
+# MAGIC from taxi_trips
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select
+# MAGIC   dayofweek(tpep_pickup_datetime) as day_of_week,
+# MAGIC   avg(trip_distance)
+# MAGIC from taxi_trips
+# MAGIC group by
+# MAGIC   day_of_week
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC select
+# MAGIC   dayofweek(tpep_pickup_datetime) as day_of_week,
+# MAGIC   count(1)
+# MAGIC from taxi_trips
+# MAGIC group by
+# MAGIC   day_of_week
 
 # COMMAND ----------
 
@@ -48,13 +115,99 @@ spark.sql(query).display()
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC     SELECT count(VendorID), date_format (tpep_dropoff_datetime, 'E') a
+# MAGIC     FROM taxi_trips
+# MAGIC     WHERE payment_type == 2
+# MAGIC     group by a
+# MAGIC     order by count(VendorID)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #### Pergunta 4: Qual é a proporção de viagens curtas (< 2 milhas) para viagens longas (>= 2 milhas) durante os dias úteis?
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC     DAYOFWEEK(tpep_pickup_datetime) AS diaSemana,
+# MAGIC     SUM(CASE WHEN trip_distance < 2 THEN 1 ELSE 0 END) AS viagemCurta,
+# MAGIC     SUM(CASE WHEN trip_distance >= 2 THEN 1 ELSE 0 END) AS viagemLonga,
+# MAGIC     COUNT(*) AS totalViagem
+# MAGIC FROM
+# MAGIC     taxi_trips
+# MAGIC WHERE
+# MAGIC     DAYOFWEEK(tpep_pickup_datetime) BETWEEN 2 AND 6
+# MAGIC GROUP BY
+# MAGIC     diaSemana
+# MAGIC ORDER BY
+# MAGIC     diaSemana;
+
+# COMMAND ----------
+
+import pyspark.sql.functions as F
+
+# COMMAND ----------
+
+display(
+    df
+    .withColumn('trip_type', F.when(
+        F.col("trip_distance")<2, "curta"
+        ).otherwise("longa")
+    )
+    .filter(
+        F.dayofweek("tpep_pickup_datetime").isin([1,7])
+    )
+    .groupby("trip_type")
+    .count()
+)
+
+# COMMAND ----------
+
+display(
+    df
+    .withColumn('trip_type', F.when(
+        F.col("trip_distance")<2, "curta"
+        ).otherwise("longa")
+    )
+    .filter(
+        F.dayofweek("tpep_pickup_datetime").between(2,6)
+    )
+    .groupby("trip_type")
+    .count()
+)
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #### Pergunta 5: Em quais horários os passageiros dão as melhores gorjetas?
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   CAST(DATE_FORMAT(tpep_pickup_datetime, 'H') AS INT) AS hora,
+# MAGIC   AVG(tip_amount) AS melhor_gorjeta
+# MAGIC FROM
+# MAGIC   taxi_trips
+# MAGIC GROUP BY
+# MAGIC   hora
+# MAGIC ORDER BY
+# MAGIC   melhor_gorjeta DESC;
+
+# COMMAND ----------
+
+# MAGIC %sql
+# MAGIC SELECT
+# MAGIC   CAST(DATE_FORMAT(tpep_dropoff_datetime, 'H') AS INT) AS hora,
+# MAGIC   AVG(tip_amount) AS melhor_gorjeta
+# MAGIC FROM
+# MAGIC   taxi_trips
+# MAGIC GROUP BY
+# MAGIC   hora
+# MAGIC ORDER BY
+# MAGIC   melhor_gorjeta DESC;
 
 # COMMAND ----------
 
@@ -65,6 +218,14 @@ spark.sql(query).display()
 
 # MAGIC %md
 # MAGIC #### Pergunta 6: Qual é o valor médio das corridas por tipo de pagamento?
+
+# COMMAND ----------
+
+display(
+    df
+    .groupBy("payment_type")
+    .count()
+)
 
 # COMMAND ----------
 
