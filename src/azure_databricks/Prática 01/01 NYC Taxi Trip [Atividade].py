@@ -12,7 +12,19 @@ df = spark.read.csv("dbfs:/databricks-datasets/nyctaxi/tripdata/yellow/yellow_tr
 
 # COMMAND ----------
 
-df.printSchema()
+# MAGIC %md
+# MAGIC ###### Para facilitar a execução das atividades, quem tiver maior familiaridade com SQL poderá utilizar o comando abaixo que nos permite executar queries SQL diretamente
+
+# COMMAND ----------
+
+df.createOrReplaceTempView("taxi_trips")
+
+query = """
+    SELECT *
+    FROM taxi_trips
+"""
+
+spark.sql(query).display()
 
 # COMMAND ----------
 
