@@ -20,7 +20,7 @@
 				"spark.dynamicAllocation.enabled": "false",
 				"spark.dynamicAllocation.minExecutors": "2",
 				"spark.dynamicAllocation.maxExecutors": "2",
-				"spark.autotune.trackingId": "50d1f006-2531-42b3-b735-05fb8e3ea6e3"
+				"spark.autotune.trackingId": "b9e077cc-612b-4911-8a8b-166883423498"
 			}
 		},
 		"metadata": {
@@ -304,7 +304,7 @@
 					"\n",
 					")"
 				],
-				"execution_count": 8
+				"execution_count": 33
 			},
 			{
 				"cell_type": "code",
@@ -356,10 +356,15 @@
 					"   .otherwise('Desconhecida')\n",
 					")                            \n",
 					"\n",
+					"df_silver = df_silver.withColumn(\n",
+					"    \"dayOfWeek\",\n",
+					"    F.dayofweek(\"lpepPickupDatetime\")\n",
+					"    )\n",
+					"\n",
 					"# Log dos dados transformados\n",
 					"print(f\"Dataframe transformado com {df_silver.count()} registros.\")"
 				],
-				"execution_count": 11
+				"execution_count": 27
 			},
 			{
 				"cell_type": "code",
@@ -377,10 +382,10 @@
 				},
 				"source": [
 					"display(\n",
-					"    df_silver.select('paymentType', 'paymentTypeDescricao')\n",
+					"    df_silver.select('paymentType', 'paymentTypeDescricao', 'dayOfWeek')\n",
 					")"
 				],
-				"execution_count": 12
+				"execution_count": 28
 			},
 			{
 				"cell_type": "markdown",
@@ -409,30 +414,12 @@
 					}
 				},
 				"source": [
-					"df_silver.explain(\"EXTENDED\")"
-				],
-				"execution_count": 13
-			},
-			{
-				"cell_type": "code",
-				"metadata": {
-					"jupyter": {
-						"source_hidden": false,
-						"outputs_hidden": false
-					},
-					"nteract": {
-						"transient": {
-							"deleting": false
-						}
-					}
-				},
-				"source": [
 					"df_silver.write.parquet(\n",
 					"    path='abfss://azuresynapse@samasterclouddev01.dfs.core.windows.net/nyc_taxi/silver',\n",
 					"    mode='overwrite'\n",
 					")"
 				],
-				"execution_count": 14
+				"execution_count": 31
 			},
 			{
 				"cell_type": "markdown",
@@ -480,7 +467,65 @@
 					"    format='parquet'\n",
 					")"
 				],
-				"execution_count": 15
+				"execution_count": 29
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"import pyspark.sql.functions as F"
+				],
+				"execution_count": 22
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					}
+				},
+				"source": [
+					"df_silver"
+				],
+				"execution_count": 23
+			},
+			{
+				"cell_type": "code",
+				"metadata": {
+					"jupyter": {
+						"source_hidden": false,
+						"outputs_hidden": false
+					},
+					"nteract": {
+						"transient": {
+							"deleting": false
+						}
+					},
+					"collapsed": false
+				},
+				"source": [
+					"display(df_silver.withColumn(\n",
+					"    \"dayOfWeek\",\n",
+					"    F.dayofweek(\"lpepPickupDatetime\")\n",
+					"    ))"
+				],
+				"execution_count": 26
 			},
 			{
 				"cell_type": "code",
