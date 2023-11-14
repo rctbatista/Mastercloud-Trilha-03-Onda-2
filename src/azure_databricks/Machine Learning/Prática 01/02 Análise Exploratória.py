@@ -110,7 +110,21 @@ plt.show()
 
 # COMMAND ----------
 
-plt.scatter(df['idade'], df['salario_mensal'])
+# Calculando Q1 e Q3
+Q1 = df['salario_mensal'].quantile(0.25)
+Q3 = df['salario_mensal'].quantile(0.75)
+IQR = Q3 - Q1
+ 
+# Definindo limites para outliers
+limite_inferior = Q1 - 1.5 * IQR
+limite_superior = Q3 + 1.5 * IQR
+ 
+# Removendo os outliers
+df_filtrado = df[(df['salario_mensal'] >= limite_inferior) & (df['salario_mensal'] <= limite_superior)]
+
+# COMMAND ----------
+
+plt.scatter(df_filtrado['idade'], df_filtrado['salario_mensal'])
 plt.title('Scatter Plot de Idade vs Renda')
 plt.xlabel('Idade')
 plt.ylabel('Renda')
@@ -119,10 +133,55 @@ plt.show()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC #### Histograma (KDE) para inadimplência
+
+# COMMAND ----------
+
+plt.figure(figsize = (10, 8))
+
+# KDE plot of loans that were repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 0, 'idade'], label = 'Bom pagador')
+
+# KDE plot of loans which were not repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 1, 'idade'], label = 'Mau pagador')
+
+# Labeling of plot
+plt.xlabel('Idade (anos)'); 
+plt.ylabel('Density'); 
+plt.title('Distribuição das idades');
+plt.legend();
+
+# COMMAND ----------
+
+plt.figure(figsize = (10, 8))
+
+# KDE plot of loans that were repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 0, 'numero_linhas_crdto_aberto'], label = 'Bom pagador')
+
+# KDE plot of loans which were not repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 1, 'numero_linhas_crdto_aberto'], label = 'Mau pagador')
+
+# Labeling of plot
+plt.xlabel('numero_linhas_crdto_aberto (anos)'); 
+plt.ylabel('Density'); 
+plt.title('Distribuição das idades');
+plt.legend();
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC #### Correlação
 # MAGIC Conceito:
 # MAGIC  - A correlação mede a relação estatística entre duas variáveis.
 # MAGIC  - O coeficiente de correlação varia entre -1 e 1. Valores próximos a 1 indicam forte correlação positiva, enquanto valores próximos a -1 indicam forte correlação negativa.
+
+# COMMAND ----------
+
+df.corr()
+
+# COMMAND ----------
+
+sns.heatmap(df.corr())
 
 # COMMAND ----------
 
