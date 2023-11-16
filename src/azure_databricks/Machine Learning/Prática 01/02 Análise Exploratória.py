@@ -73,6 +73,14 @@ plt.show()
 
 # COMMAND ----------
 
+df['inadimplente'].value_counts()
+
+# COMMAND ----------
+
+df["salario_mensal"].describe()
+
+# COMMAND ----------
+
 import matplotlib.pyplot as plt
 
 df.hist(bins=50, figsize=(20,15))
@@ -102,6 +110,36 @@ plt.show()
 
 # COMMAND ----------
 
+# Calculando Q1 e Q3
+Q1 = df['salario_mensal'].quantile(0.25)
+Q3 = df['salario_mensal'].quantile(0.75)
+IQR = Q3 - Q1
+ 
+# Definindo limites para outliers
+limite_inferior = Q1 - 1.5 * IQR
+limite_superior = Q3 + 1.5 * IQR
+ 
+# Removendo os outliers
+df_filtrado = df[(df['salario_mensal'] >= limite_inferior) & (df['salario_mensal'] <= limite_superior)]
+
+# COMMAND ----------
+
+sns.scatterplot(data=df_filtrado, x="idade", y="salario_mensal", hue='inadimplente', alpha=0.5)
+
+# COMMAND ----------
+
+sns.scatterplot(data=df, x="idade", y="numero_emprestimos_imobiliarios", hue='inadimplente', alpha=0.2)
+
+# COMMAND ----------
+
+sns.scatterplot(data=df_filtrado, x="salario_mensal", y="numero_emprestimos_imobiliarios", hue='inadimplente', alpha=0.2)
+
+# COMMAND ----------
+
+sns.scatterplot(data=df_filtrado, x="numero_de_dependentes", y="salario_mensal", hue='inadimplente', alpha=0.2)
+
+# COMMAND ----------
+
 plt.scatter(df['idade'], df['numero_emprestimos_imobiliarios'], alpha=0.5)
 plt.title('Scatter Plot de Idade vs Quantidade de Emprestimos Imobilários')
 plt.xlabel('Idade')
@@ -110,7 +148,21 @@ plt.show()
 
 # COMMAND ----------
 
-plt.scatter(df['idade'], df['salario_mensal'])
+# Calculando Q1 e Q3
+Q1 = df['salario_mensal'].quantile(0.25)
+Q3 = df['salario_mensal'].quantile(0.75)
+IQR = Q3 - Q1
+ 
+# Definindo limites para outliers
+limite_inferior = Q1 - 1.5 * IQR
+limite_superior = Q3 + 1.5 * IQR
+ 
+# Removendo os outliers
+df_filtrado = df[(df['salario_mensal'] >= limite_inferior) & (df['salario_mensal'] <= limite_superior)]
+
+# COMMAND ----------
+
+plt.scatter(df_filtrado['idade'], df_filtrado['salario_mensal'])
 plt.title('Scatter Plot de Idade vs Renda')
 plt.xlabel('Idade')
 plt.ylabel('Renda')
@@ -119,10 +171,92 @@ plt.show()
 # COMMAND ----------
 
 # MAGIC %md
+# MAGIC #### Histograma (KDE) para inadimplência
+
+# COMMAND ----------
+
+plt.figure(figsize = (10, 8))
+
+# KDE plot of loans that were repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 0, 'idade'], label = 'Bom pagador')
+
+# KDE plot of loans which were not repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 1, 'idade'], label = 'Mau pagador')
+
+# Labeling of plot
+plt.xlabel('Idade (anos)'); 
+plt.ylabel('Density'); 
+plt.title('Distribuição das idades');
+plt.legend();
+
+# COMMAND ----------
+
+plt.figure(figsize = (10, 8))
+
+# KDE plot of loans that were repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 0, 'numero_emprestimos_imobiliarios'], label = 'Bom pagador')
+
+# KDE plot of loans which were not repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 1, 'numero_emprestimos_imobiliarios'], label = 'Mau pagador')
+
+# Labeling of plot
+plt.xlabel('numero_emprestimos_imobiliarios (anos)'); 
+plt.ylabel('Density'); 
+plt.title('Distribuição das numero_emprestimos_imobiliarios');
+plt.legend();
+
+# COMMAND ----------
+
+plt.figure(figsize = (10, 8))
+
+# KDE plot of loans that were repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 0, 'numero_linhas_crdto_aberto'], label = 'Bom pagador')
+
+# KDE plot of loans which were not repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 1, 'numero_linhas_crdto_aberto'], label = 'Mau pagador')
+
+# Labeling of plot
+plt.xlabel('numero_linhas_crdto_aberto (anos)'); 
+plt.ylabel('Density'); 
+plt.title('Distribuição das idades');
+plt.legend();
+
+# COMMAND ----------
+
+# MAGIC %md
 # MAGIC #### Correlação
 # MAGIC Conceito:
 # MAGIC  - A correlação mede a relação estatística entre duas variáveis.
 # MAGIC  - O coeficiente de correlação varia entre -1 e 1. Valores próximos a 1 indicam forte correlação positiva, enquanto valores próximos a -1 indicam forte correlação negativa.
+
+# COMMAND ----------
+
+df['idade_cat'] = pd.cut(df['idade'], bins=list(range(18, 81, 5)), right=False)
+
+# COMMAND ----------
+
+df['idade_cat'].value_counts(normalize=True).sort_index().plot.bar()
+
+# COMMAND ----------
+
+df.groupby('idade_cat')['inadimplente'].mean().plot()
+
+# COMMAND ----------
+
+df[['inadimplente','idade', 'salario_mensal', 'numero_linhas_crdto_aberto', 'numero_emprestimos_imobiliarios']].corr()
+
+# COMMAND ----------
+
+df_filtrado[['inadimplente','idade', 'salario_mensal', 'numero_linhas_crdto_aberto', 'numero_emprestimos_imobiliarios']].corr('spearman')
+
+# COMMAND ----------
+
+df.corr()
+
+# COMMAND ----------
+
+ax, fig = plt.subplots(figsize=(16, 16))
+sns.heatmap(df_filtrado.drop(['inadimplente'], axis=1).corr(), annot=True, fmt=".2f")
 
 # COMMAND ----------
 
@@ -148,6 +282,10 @@ df['salario_mensal_faltante'] = df['salario_mensal'].isnull().astype(int)
 
 # Exibir as primeiras linhas do DataFrame com as novas variáveis
 df.head()
+
+# COMMAND ----------
+
+df['inadimplente']
 
 # COMMAND ----------
 
