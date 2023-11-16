@@ -35,10 +35,22 @@ display(df)
 
 # COMMAND ----------
 
+df['Idade'].describe(), df['Renda'].describe()
+
+# COMMAND ----------
+
 # MAGIC %md
 # MAGIC #### Passo 2: Visualização com Scatter Plot
 # MAGIC
 # MAGIC Um scatter plot ajuda a visualizar a relação entre as duas variáveis.
+
+# COMMAND ----------
+
+df['Idade'].hist()
+
+# COMMAND ----------
+
+df['Renda'].hist()
 
 # COMMAND ----------
 
@@ -78,7 +90,7 @@ plt.show()
 
 # COMMAND ----------
 
-sns.heatmap(correlacao, cmap = plt.cm.RdYlBu_r, vmin = -0.25, annot = True, vmax = 0.6)
+sns.heatmap(correlacao, vmin = -0.25, annot = True, vmax = 0.6)
 plt.title('Heatmap de Correlação entre Idade e Renda')
 plt.show()
 
@@ -110,7 +122,7 @@ plt.show()
 # COMMAND ----------
 
 # Exemplo com a relação quadrática
-coeficientes = np.polyfit(df_sen['Idade'], df_sen['Salario'], 3)
+coeficientes = np.polyfit(df_sen['Idade'], df_sen['Salario'], 4)
 polinomio = np.poly1d(coeficientes)
 x = np.linspace(min(df_sen['Idade']), max(df_sen['Idade']), 100)
 

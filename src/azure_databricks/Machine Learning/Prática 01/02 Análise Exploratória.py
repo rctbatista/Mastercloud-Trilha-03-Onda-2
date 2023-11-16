@@ -73,6 +73,14 @@ plt.show()
 
 # COMMAND ----------
 
+df['inadimplente'].value_counts()
+
+# COMMAND ----------
+
+df["salario_mensal"].describe()
+
+# COMMAND ----------
+
 import matplotlib.pyplot as plt
 
 df.hist(bins=50, figsize=(20,15))
@@ -99,6 +107,36 @@ plt.show()
 # MAGIC Conceito:
 # MAGIC  - Scatter plots são utilizados para visualizar a relação entre duas variáveis quantitativas.
 # MAGIC  - Úteis para identificar padrões de correlação.
+
+# COMMAND ----------
+
+# Calculando Q1 e Q3
+Q1 = df['salario_mensal'].quantile(0.25)
+Q3 = df['salario_mensal'].quantile(0.75)
+IQR = Q3 - Q1
+ 
+# Definindo limites para outliers
+limite_inferior = Q1 - 1.5 * IQR
+limite_superior = Q3 + 1.5 * IQR
+ 
+# Removendo os outliers
+df_filtrado = df[(df['salario_mensal'] >= limite_inferior) & (df['salario_mensal'] <= limite_superior)]
+
+# COMMAND ----------
+
+sns.scatterplot(data=df_filtrado, x="idade", y="salario_mensal", hue='inadimplente', alpha=0.5)
+
+# COMMAND ----------
+
+sns.scatterplot(data=df, x="idade", y="numero_emprestimos_imobiliarios", hue='inadimplente', alpha=0.2)
+
+# COMMAND ----------
+
+sns.scatterplot(data=df_filtrado, x="salario_mensal", y="numero_emprestimos_imobiliarios", hue='inadimplente', alpha=0.2)
+
+# COMMAND ----------
+
+sns.scatterplot(data=df_filtrado, x="numero_de_dependentes", y="salario_mensal", hue='inadimplente', alpha=0.2)
 
 # COMMAND ----------
 
@@ -156,6 +194,22 @@ plt.legend();
 plt.figure(figsize = (10, 8))
 
 # KDE plot of loans that were repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 0, 'numero_emprestimos_imobiliarios'], label = 'Bom pagador')
+
+# KDE plot of loans which were not repaid on time
+sns.kdeplot(df.loc[df['inadimplente'] == 1, 'numero_emprestimos_imobiliarios'], label = 'Mau pagador')
+
+# Labeling of plot
+plt.xlabel('numero_emprestimos_imobiliarios (anos)'); 
+plt.ylabel('Density'); 
+plt.title('Distribuição das numero_emprestimos_imobiliarios');
+plt.legend();
+
+# COMMAND ----------
+
+plt.figure(figsize = (10, 8))
+
+# KDE plot of loans that were repaid on time
 sns.kdeplot(df.loc[df['inadimplente'] == 0, 'numero_linhas_crdto_aberto'], label = 'Bom pagador')
 
 # KDE plot of loans which were not repaid on time
@@ -177,11 +231,32 @@ plt.legend();
 
 # COMMAND ----------
 
+df['idade_cat'] = pd.cut(df['idade'], bins=list(range(18, 81, 5)), right=False)
+
+# COMMAND ----------
+
+df['idade_cat'].value_counts(normalize=True).sort_index().plot.bar()
+
+# COMMAND ----------
+
+df.groupby('idade_cat')['inadimplente'].mean().plot()
+
+# COMMAND ----------
+
+df[['inadimplente','idade', 'salario_mensal', 'numero_linhas_crdto_aberto', 'numero_emprestimos_imobiliarios']].corr()
+
+# COMMAND ----------
+
+df_filtrado[['inadimplente','idade', 'salario_mensal', 'numero_linhas_crdto_aberto', 'numero_emprestimos_imobiliarios']].corr('spearman')
+
+# COMMAND ----------
+
 df.corr()
 
 # COMMAND ----------
 
-sns.heatmap(df.corr())
+ax, fig = plt.subplots(figsize=(16, 16))
+sns.heatmap(df_filtrado.drop(['inadimplente'], axis=1).corr(), annot=True, fmt=".2f")
 
 # COMMAND ----------
 
@@ -207,6 +282,10 @@ df['salario_mensal_faltante'] = df['salario_mensal'].isnull().astype(int)
 
 # Exibir as primeiras linhas do DataFrame com as novas variáveis
 df.head()
+
+# COMMAND ----------
+
+df['inadimplente']
 
 # COMMAND ----------
 
